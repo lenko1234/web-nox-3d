@@ -121,18 +121,19 @@
             color: #008000;
         }
 
-        /* Catalog Transitions and Pure Black Theme */
+        /* Catalog Transitions and Pure Black Theme (Stationary Blur-In) */
         #catalog-view {
             opacity: 0;
+            filter: blur(25px);
             pointer-events: none;
-            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            transform: translateY(24px);
+            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: opacity, filter;
         }
 
         #catalog-view.active {
             opacity: 1;
+            filter: blur(0px);
             pointer-events: auto;
-            transform: translateY(0);
         }
 
         .category-pill {
