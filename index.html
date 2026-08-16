@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TIENDA 3D - The Prismatic Voxel</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter & Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800;900&display=swap"
+        rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            background-color: #05050b;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #ffffff;
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+        }
+
+        #webgl-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            outline: none;
+            pointer-events: none;
+        }
+
+        /* Minimalist Glassmorphism overlay */
+        .glass-nav {
+            background: transparent;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            border-bottom: none;
+        }
+
+        .glass-card {
+            background: rgba(12, 12, 22, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .text-glow {
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.95), 0 0 30px rgba(0, 0, 0, 0.9), 0 0 50px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Fixed Central Story Text Blur In / Blur Out (Zero Motion) */
+        .story-step {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 48rem;
+            text-align: center;
+            opacity: 0;
+            filter: blur(30px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                filter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+            will-change: opacity, filter;
+        }
+
+        .story-step h1,
+        .story-step h2 {
+            text-shadow: 0 4px 25px rgba(0, 0, 0, 0.98), 0 2px 10px rgba(0, 0, 0, 0.95), 0 0 40px rgba(0, 0, 0, 0.9);
+        }
+
+        .story-step p {
+            text-shadow: 0 3px 15px rgba(0, 0, 0, 0.98), 0 1px 6px rgba(0, 0, 0, 0.95), 0 0 25px rgba(0, 0, 0, 0.9);
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 500;
+        }
+
+        .story-step.active {
+            opacity: 1;
+            filter: blur(0px);
+            pointer-events: auto;
+        }
+
+        .story-step.exit {
+            opacity: 0;
+            filter: blur(30px);
+            pointer-events: none;
+        }
+
+        .text-accent {
+            color: #008000;
+        }
+    </style>
+</head>
+
+<body class="relative min-h-screen bg-[#05050b] text-white">
+
+    <!-- 3D Canvas Layer -->
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- Top Navbar (Fixed Transparent) -->
+    <header
+        class="fixed top-0 left-0 w-full z-20 glass-nav px-6 py-6 md:px-10 flex items-center justify-between pointer-events-auto">
+        <!-- Brand Logo -->
+        <a href="#" class="flex items-center gap-3 group">
+            <span class="font-extrabold text-2xl tracking-wider text-white uppercase drop-shadow-md">NOX <span
+                    class="text-accent">3D</span></span>
+        </a>
+
+        <!-- Navigation Links -->
+        <nav class="hidden md:flex items-center gap-8 font-medium text-sm text-slate-300/90 tracking-wide">
+            <a href="#" class="hover:text-white transition-colors duration-200">Inicio</a>
+            <a href="#" class="hover:text-white transition-colors duration-200">Productos</a>
+            <a href="#" class="hover:text-white transition-colors duration-200">Servicios</a>
+            <a href="#" class="hover:text-white transition-colors duration-200">Catálogo</a>
+            <a href="#" class="hover:text-white transition-colors duration-200">Contacto</a>
+        </nav>
+
+        <div></div>
+    </header>
+
+    <!-- Fixed Central Story Text Container (Stationary In-Place Blur In/Out) -->
+    <div class="fixed inset-0 pointer-events-none z-10">
+        <!-- Step 0: Hero -->
+        <div id="story-step-0" class="story-step active space-y-5">
+            <h1
+                class="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight text-white text-glow leading-none uppercase">
+                MATERIALIZAMOS TU VISIÓN. <span class="text-accent">EN 3D.</span>
+            </h1>
+            <p class="text-sm md:text-base text-slate-200/90 font-light tracking-wide max-w-lg mx-auto">
+                Dale forma física a tus ideas. Explorá nuestros diseños o enviános tu propio modelo. Nosotros lo hacemos
+                realidad.
+            </p>
+            <div class="pt-3 flex flex-wrap justify-center gap-3 pointer-events-auto">
+                <a href="#"
+                    class="bg-[#008000] hover:bg-[#006600] text-white font-bold text-xs px-6 py-3 rounded-xl transition-all shadow-lg shadow-[#008000]/30 flex items-center gap-2">
+                    <span>Explorar catálogo</span>
+                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                </a>
+                <a href="#"
+                    class="glass-card hover:bg-white/10 text-white font-semibold text-xs px-6 py-3 rounded-xl transition-all">
+                    Quiero imprimir algo
+                </a>
+            </div>
+        </div>
+
+        <!-- Step 1: Catálogo -->
+        <div id="story-step-1" class="story-step space-y-5">
+            <h2
+                class="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight text-white text-glow leading-none uppercase">
+                DISEÑOS QUE YA ESTÁN <span class="text-accent">LISTOS.</span>
+            </h2>
+            <p class="text-sm md:text-base text-slate-200/90 font-light tracking-wide max-w-lg mx-auto">
+                Objetos funcionales, decoración y piezas de diseño pensadas para transformar tus espacios. Elegí el
+                modelo, seleccioná el color y recibilo directamente en tu casa.
+            </p>
+            <div class="pt-3 flex justify-center pointer-events-auto">
+                <a href="#"
+                    class="bg-[#008000] hover:bg-[#006600] text-white font-bold text-xs px-6 py-3 rounded-xl transition-all shadow-lg shadow-[#008000]/30 flex items-center gap-2">
+                    <span>Ver productos</span>
+                    <i class="fa-solid fa-store text-xs"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Step 2: Pedido Personalizado -->
+        <div id="story-step-2" class="story-step space-y-5">
+            <h2
+                class="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight text-white text-glow leading-none uppercase">
+                ¿TENÉS UNA IDEA? <span class="text-accent">LA FABRICAMOS.</span>
+            </h2>
+            <p class="text-sm md:text-base text-slate-200/90 font-light tracking-wide max-w-lg mx-auto">
+                Mandanos tu archivo STL, un modelo 3D o incluso una referencia de lo que querés crear. Analizamos tu
+                proyecto, te enviamos un presupuesto y lo convertimos en una pieza real.<br><br>
+                <span class="text-slate-300 font-normal">Trabajamos con PLA, PETG y TPU, según las necesidades de cada
+                    proyecto.</span>
+            </p>
+            <div class="pt-3 flex justify-center pointer-events-auto">
+                <a href="#"
+                    class="glass-card hover:bg-[#008000] text-white font-bold text-xs px-6 py-3 rounded-xl transition-all flex items-center gap-2 border-[#008000]/40">
+                    <i class="fa-solid fa-cloud-arrow-up text-accent"></i>
+                    <span>Enviar mi modelo</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Step 3: Calidad FDM -->
+        <div id="story-step-3" class="story-step space-y-5">
+            <h2
+                class="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight text-white text-glow leading-none uppercase">
+                PRECISIÓN EN <span class="text-accent">CADA CAPA.</span>
+            </h2>
+            <p class="text-sm md:text-base text-slate-200/90 font-light tracking-wide max-w-lg mx-auto">
+                Imprimimos en 3D con tecnología FDM, logrando piezas resistentes y con excelentes terminaciones.
+                Además, podés pagar tus compras en 3 cuotas sin interés.
+            </p>
+            <div class="pt-3 flex justify-center pointer-events-auto">
+                <a href="#"
+                    class="glass-card hover:bg-white/10 text-white font-semibold text-xs px-6 py-3 rounded-xl transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-shield-halved text-accent"></i>
+                    <span>Ver envíos y garantía</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Step 4: CTA Final -->
+        <div id="story-step-4" class="story-step space-y-5">
+            <h2
+                class="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight text-white text-glow leading-none uppercase">
+                ¿QUÉ TENÉS <span class="text-accent">EN MENTE?</span>
+            </h2>
+            <p class="text-sm md:text-base text-slate-200/90 font-light tracking-wide max-w-lg mx-auto">
+                Una pieza para tu escritorio, un regalo, un diseño propio o una idea que todavía no existe como objeto.
+                Contanos qué necesitás y encontremos la forma de hacerlo realidad.
+            </p>
+            <div class="pt-3 flex flex-wrap justify-center gap-3 pointer-events-auto">
+                <a href="#"
+                    class="bg-[#008000] hover:bg-[#006600] text-white font-bold text-xs px-6 py-3 rounded-xl transition-all shadow-lg shadow-[#008000]/30 flex items-center gap-2">
+                    <i class="fa-brands fa-whatsapp text-sm"></i>
+                    <span>Hablar por WhatsApp</span>
+                </a>
+                <a href="#"
+                    class="glass-card hover:bg-white/10 text-white font-bold text-xs px-6 py-3 rounded-xl transition-all">
+                    Hacer un pedido
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scroll Height Drivers (Triggers) -->
+    <main id="ui-container" class="relative z-0 w-full">
+        <section class="story-section min-h-screen" data-step="0"></section>
+        <section class="story-section min-h-screen" data-step="1"></section>
+        <section class="story-section min-h-screen" data-step="2"></section>
+        <section class="story-section min-h-screen" data-step="3"></section>
+        <section class="story-section min-h-screen" data-step="4"></section>
+    </main>
+
+    <!-- Fixed Footer Bar -->
+    <footer
+        class="fixed bottom-0 left-0 w-full z-20 px-6 py-4 md:px-10 flex items-center justify-between pointer-events-none text-xs text-slate-400/80">
+        <div>© 2026 NOX 3D. Impresión & Diseño Digital.</div>
+        <div class="flex items-center gap-4">
+            <span><i class="fa-solid fa-arrows-up-down text-accent mr-1.5"></i>Deslizá para explorar</span>
+        </div>
+    </footer>
+
+    <script>
+        // --- State Variables ---
+        const config = {
+            gridX: 200,              // Wide grid X to cover screen corners
+            gridZ: 240,              // Deep grid Z extending high up top
+            spacing: 0.82,           // Voxel pitch spacing
+            voxelSize: 0.76,         // Cube size (leaves clean dark grid lines)
+            baseHeight: 0.25,
+            maxHeight: 3.0,
+            waveSpeed: 1.2,
+            palette: 'sunset',
+            mode: 'ripple',
+            camMode: 'isometric'
+        };
+
+        // --- Color Palettes ---
+        const colorPalettes = {
+            emerald: (distFromMouse, heightRatio, time) => {
+                if (distFromMouse < 20) {
+                    const normalizedDist = distFromMouse / 20;
+                    const hue = 0.40 + (1.0 - normalizedDist) * 0.12;
+                    const lightness = 0.35 + (1.0 - normalizedDist) * 0.45 + heightRatio * 0.25;
+                    return new THREE.Color().setHSL(hue, 0.95, Math.min(0.85, lightness));
+                } else {
+                    const idleHue = 0.44 + Math.sin(time * 0.5) * 0.03;
+                    const idleLightness = 0.06 + heightRatio * 0.2;
+                    return new THREE.Color().setHSL(idleHue, 0.85, idleLightness);
+                }
+            },
+            prismatic: (distFromMouse, heightRatio, time) => {
+                if (distFromMouse < 18) {
+                    const normalizedDist = distFromMouse / 18;
+                    const hue = (0.08 + (1.0 - normalizedDist) * 0.75 + time * 0.05) % 1.0;
+                    const lightness = 0.35 + (1.0 - normalizedDist) * 0.45 + heightRatio * 0.2;
+                    return new THREE.Color().setHSL(hue, 0.95, Math.min(0.85, lightness));
+                } else {
+                    const idleHue = 0.72 + Math.sin(time * 0.5) * 0.05;
+                    const idleLightness = 0.08 + heightRatio * 0.2;
+                    return new THREE.Color().setHSL(idleHue, 0.7, idleLightness);
+                }
+            },
+            cyberpunk: (distFromMouse, heightRatio, time) => {
+                const mix = Math.sin(distFromMouse * 0.25 - time * 2) * 0.5 + 0.5;
+                const hue = THREE.MathUtils.lerp(0.85, 0.52, mix);
+                return new THREE.Color().setHSL(hue, 0.95, 0.15 + heightRatio * 0.5);
+            },
+            sunset: (distFromMouse, heightRatio, time) => {
+                const hue = (0.96 + heightRatio * 0.2 + time * 0.02) % 1.0;
+                return new THREE.Color().setHSL(hue, 0.9, 0.15 + heightRatio * 0.5);
+            },
+            monochrome: (distFromMouse, heightRatio, time) => {
+                const val = 0.08 + heightRatio * 0.85;
+                return new THREE.Color(val, val * 1.05, val * 1.2);
+            }
+        };
+
+        let scene, camera, renderer, instancedMesh;
+        let dummy = new THREE.Object3D();
+        let pointLight, dirLight;
+        let lastTime = 0;
+        let waveAccumulator = 0;
+
+        // Camera positions for angles (100% fixed)
+        const camPositions = {
+            isometric: { pos: new THREE.Vector3(18, 22, 22), look: new THREE.Vector3(0, -1, 0) },
+            top: { pos: new THREE.Vector3(0, 38, 0.1), look: new THREE.Vector3(0, 0, 0) },
+            low: { pos: new THREE.Vector3(0, 8, 24), look: new THREE.Vector3(0, 2, 0) }
+        };
+
+        function initThree() {
+            const canvas = document.getElementById('webgl-canvas');
+
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x05050b);
+            scene.fog = new THREE.FogExp2(0x05050b, 0.005);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            updateCameraPosition('isometric', true);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, powerPreference: "high-performance" });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            dirLight = new THREE.DirectionalLight(0xffffff, 1.4);
+            dirLight.position.set(25, 45, 20);
+            dirLight.castShadow = true;
+            dirLight.shadow.mapSize.width = 2048;
+            dirLight.shadow.mapSize.height = 2048;
+            scene.add(dirLight);
+
+            // Glowing center point light
+            pointLight = new THREE.PointLight(0xf59e0b, 4.5, 26);
+            pointLight.position.set(0, 4, 0);
+            scene.add(pointLight);
+
+            // Create Instanced Mesh Grid
+            createVoxelGrid();
+
+            // Window Listener
+            window.addEventListener('resize', onWindowResize);
+
+            // Start render loop
+            animate(0);
+        }
+
+        function createVoxelGrid() {
+            if (instancedMesh) scene.remove(instancedMesh);
+
+            const totalCount = config.gridX * config.gridZ;
+
+            // Unit Box Geometry with base at y=0
+            const geometry = new THREE.BoxGeometry(config.voxelSize, 1, config.voxelSize);
+            geometry.translate(0, 0.5, 0);
+
+            const material = new THREE.MeshStandardMaterial({
+                roughness: 0.25,
+                metalness: 0.2,
+            });
+
+            instancedMesh = new THREE.InstancedMesh(geometry, material, totalCount);
+            instancedMesh.castShadow = true;
+            instancedMesh.receiveShadow = true;
+            instancedMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+
+            scene.add(instancedMesh);
+        }
+
+        function updateCameraPosition(mode, immediate = false) {
+            config.camMode = mode;
+            const target = camPositions[mode];
+            if (immediate) {
+                camera.position.copy(target.pos);
+                camera.lookAt(target.look);
+            }
+        }
+
+        function animate(time) {
+            requestAnimationFrame(animate);
+
+            // Calculate delta time
+            const delta = lastTime === 0 ? 0.016 : Math.min(0.1, (time - lastTime) * 0.001);
+            lastTime = time;
+
+            // Calculate scroll factor (0.0 at top, 1.0 at bottom)
+            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+            const scrollRatio = maxScroll > 0 ? Math.min(1, Math.max(0, window.scrollY / maxScroll)) : 0;
+
+            // Speed decelerates smoothly with scroll down to ~12% speed
+            const speedFactor = Math.max(0.12, 1.0 - scrollRatio * 0.88);
+            const currentSpeed = config.waveSpeed * speedFactor;
+
+            waveAccumulator += delta * currentSpeed;
+            const seconds = waveAccumulator;
+
+            // Camera remains 100% fixed
+            const targetCam = camPositions[config.camMode];
+            camera.position.lerp(targetCam.pos, 0.05);
+            camera.lookAt(targetCam.look);
+
+            // Pulse point light gently at center
+            pointLight.position.set(0, 3.5 + Math.sin(seconds * 1.5) * 0.5, 0);
+
+            const offsetX = (config.gridX * config.spacing) / 2;
+            const offsetZ = (config.gridZ * config.spacing) / 2;
+
+            let idx = 0;
+            const colorFn = colorPalettes[config.palette] || colorPalettes.prismatic;
+
+            for (let x = 0; x < config.gridX; x++) {
+                for (let z = 0; z < config.gridZ; z++) {
+                    const posX = x * config.spacing - offsetX;
+                    const posZ = z * config.spacing - offsetZ;
+
+                    // Wave fixed strictly at (0, 0, 0) center
+                    const distFromCenter = Math.sqrt(posX * posX + posZ * posZ);
+
+                    // Idle wave physics
+                    let idleWave = Math.sin(distFromCenter * 0.28 - seconds * 2.0) * 0.25 +
+                        Math.cos(posX * 0.15 + seconds) * 0.15;
+
+                    // Fixed Central Wave Interaction Modes
+                    let waveImpact = 0;
+                    if (config.mode === 'ripple') {
+                        const rippleWave = Math.sin(distFromCenter * 0.7 - seconds * 4.5);
+                        const falloff = Math.exp(-distFromCenter * 0.18);
+                        waveImpact = (rippleWave + 1.2) * falloff * 3.0;
+                    } else if (config.mode === 'magnet') {
+                        waveImpact = Math.exp(-Math.pow(distFromCenter, 2) * 0.03) * 4.2;
+                    } else if (config.mode === 'vortex') {
+                        const angle = Math.atan2(posZ, posX);
+                        waveImpact = Math.sin(angle * 4 + distFromCenter * 0.6 - seconds * 3) * Math.max(0, (14 - distFromCenter) * 0.35);
+                    }
+
+                    // Combined voxel height
+                    let totalHeight = config.baseHeight + Math.max(0, idleWave + waveImpact);
+                    totalHeight = Math.min(totalHeight, config.maxHeight);
+
+                    // Set instance matrix transform
+                    dummy.position.set(posX, 0, posZ);
+                    dummy.scale.set(1, totalHeight, 1);
+                    dummy.updateMatrix();
+
+                    instancedMesh.setMatrixAt(idx, dummy.matrix);
+
+                    // Color calculation centered at (0, 0, 0)
+                    const heightRatio = totalHeight / config.maxHeight;
+                    const color = colorFn(distFromCenter, heightRatio, seconds);
+                    instancedMesh.setColorAt(idx, color);
+
+                    idx++;
+                }
+            }
+
+            instancedMesh.instanceMatrix.needsUpdate = true;
+            if (instancedMesh.instanceColor) instancedMesh.instanceColor.needsUpdate = true;
+
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initThree();
+
+            // IntersectionObserver for Fixed Central Text In-Place Blur In / Blur Out
+            const storySections = document.querySelectorAll('.story-section');
+            const allSteps = document.querySelectorAll('.story-step');
+            const observerOptions = {
+                root: null,
+                threshold: 0.5
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const stepIdx = entry.target.dataset.step;
+                    const targetStep = document.getElementById(`story-step-${stepIdx}`);
+                    if (!targetStep) return;
+
+                    if (entry.isIntersecting) {
+                        allSteps.forEach(s => {
+                            if (s === targetStep) {
+                                s.classList.remove('exit');
+                                s.classList.add('active');
+                            } else {
+                                s.classList.remove('active');
+                                s.classList.add('exit');
+                            }
+                        });
+                    }
+                });
+            }, observerOptions);
+
+            storySections.forEach(section => observer.observe(section));
+        });
+    </script>
+</body>
+
+</html>
