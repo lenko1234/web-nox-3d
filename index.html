@@ -175,7 +175,7 @@
         }
 
         .color-dot.active {
-            ring: 2px solid #008000;
+            box-shadow: 0 0 0 2px #008000;
             outline: 2px solid #ffffff;
             outline-offset: 2px;
         }
@@ -653,20 +653,9 @@
             camMode: 'isometric'
         };
 
-        // --- Color Palettes ---
-        const colorPalettes = {
-            sunset: (distFromMouse, heightRatio, time, scroll = 0) => {
-                const hue = 0.08 + scroll * 0.64 + (heightRatio * 0.1) + Math.sin(time * 0.4) * 0.015;
-                const safeHue = Math.min(0.80, Math.max(0.08, hue));
-                return new THREE.Color().setHSL(safeHue, 0.9, 0.15 + heightRatio * 0.5);
-            },
-            prismatic: (distFromMouse, heightRatio, time, scroll = 0) => {
-                const scrollOffset = scroll * 0.6;
-                const idleHue = (0.72 + scrollOffset + Math.sin(time * 0.5) * 0.05) % 1.0;
-                const idleLightness = 0.08 + heightRatio * 0.2;
-                return new THREE.Color().setHSL(idleHue, 0.7, idleLightness);
-            }
-        };
+        // --- Color Palettes & Reusable Render Objects ---
+        const tempVoxelColor = new THREE.Color();
+        const staticBlackColor = new THREE.Color(0x000000);
 
         let scene, camera, renderer, instancedMesh;
         let dummy = new THREE.Object3D();
@@ -736,14 +725,24 @@
         function animate(time) {
             requestAnimationFrame(animate);
 
+            // When in catalog mode, sleep intensive 3D math to keep scrolling 100% fluid
+            if (appState === 'catalog' && transitionProgress >= 1.0) {
+                renderer.render(scene, camera);
+                return;
+            }
+
             const delta = lastTime === 0 ? 0.016 : Math.min(0.1, (time - lastTime) * 0.001);
             lastTime = time;
 
+            const isMobile = window.innerWidth < 768;
+            const transitionSpeed = isMobile ? 0.55 : 1.05;
+
             // Handle transition state progression
             if (appState === 'to_catalog') {
-                transitionProgress += delta * 1.05;
-                // Start catalog blur-in immediately as the wave begins (~25%)
-                if (transitionProgress >= 0.40 && !document.getElementById('catalog-view').classList.contains('active')) {
+                transitionProgress += delta * transitionSpeed;
+                // Start catalog blur-in earlier as the wave begins
+                const triggerThreshold = isMobile ? 0.20 : 0.25;
+                if (transitionProgress >= triggerThreshold && !document.getElementById('catalog-view').classList.contains('active')) {
                     showCatalogUI();
                 }
                 if (transitionProgress >= 1.0) {
@@ -751,7 +750,7 @@
                     appState = 'catalog';
                 }
             } else if (appState === 'to_landing') {
-                transitionProgress -= delta * 1.1;
+                transitionProgress -= delta * 1.5;
                 if (transitionProgress <= 0.0) {
                     transitionProgress = 0.0;
                     appState = 'landing';
@@ -759,10 +758,10 @@
                 }
             }
 
-            // Scroll calculation
+            // Smooth scroll calculation for natural color transitions
             const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
             const targetScrollRatio = maxScroll > 0 ? Math.min(1, Math.max(0, window.scrollY / maxScroll)) : 0;
-            smoothScrollRatio += (targetScrollRatio - smoothScrollRatio) * 0.08;
+            smoothScrollRatio += (targetScrollRatio - smoothScrollRatio) * 0.05;
 
             const speedFactor = Math.max(0.12, 1.0 - smoothScrollRatio * 0.88);
             const currentSpeed = config.waveSpeed * speedFactor;
@@ -785,22 +784,20 @@
             const maxRadius = Math.sqrt(offsetX * offsetX + offsetZ * offsetZ);
 
             let idx = 0;
-            const colorFn = colorPalettes[config.palette] || colorPalettes.sunset;
 
             // Black wave parameters
-            // Wavefront expands from center (radius 0 -> maxRadius * 1.3)
             const waveRadius = transitionProgress * maxRadius * 1.25;
             const waveThickness = 14.0;
-            const blackColor = new THREE.Color(0x000000);
 
             for (let x = 0; x < config.gridX; x++) {
+                const posX = x * config.spacing - offsetX;
+
                 for (let z = 0; z < config.gridZ; z++) {
-                    const posX = x * config.spacing - offsetX;
                     const posZ = z * config.spacing - offsetZ;
                     const distFromCenter = Math.sqrt(posX * posX + posZ * posZ);
 
                     // Physics base wave
-                    let idleWave = Math.sin(distFromCenter * 0.28 - seconds * 2.0) * 0.25 +
+                    const idleWave = Math.sin(distFromCenter * 0.28 - seconds * 2.0) * 0.25 +
                         Math.cos(posX * 0.15 + seconds) * 0.15;
 
                     const rippleWave = Math.sin(distFromCenter * 0.7 - seconds * 4.5);
@@ -811,7 +808,12 @@
                     baseVoxelHeight = Math.min(baseVoxelHeight, config.maxHeight);
 
                     let finalHeight = baseVoxelHeight;
-                    let voxelColor = colorFn(distFromCenter, baseVoxelHeight / config.maxHeight, seconds, smoothScrollRatio);
+
+                    // Compute sunset color in-place without memory allocation
+                    const heightRatio = baseVoxelHeight / config.maxHeight;
+                    const hue = 0.08 + smoothScrollRatio * 0.64 + (heightRatio * 0.1) + Math.sin(seconds * 0.4) * 0.015;
+                    const safeHue = Math.min(0.80, Math.max(0.08, hue));
+                    tempVoxelColor.setHSL(safeHue, 0.9, 0.15 + heightRatio * 0.5);
 
                     // --- Black Wave Collapse Calculation ---
                     if (transitionProgress > 0.001) {
@@ -828,11 +830,11 @@
 
                             finalHeight = (baseVoxelHeight + crestImpulse) * collapseFactor;
                             // Interpolate color to black
-                            voxelColor.lerp(blackColor, wavePhase);
+                            tempVoxelColor.lerp(staticBlackColor, wavePhase);
                         } else {
                             // Behind the wave: completely collapsed to 0 and black
                             finalHeight = 0.001;
-                            voxelColor = blackColor;
+                            tempVoxelColor.copy(staticBlackColor);
                         }
                     }
 
@@ -842,7 +844,7 @@
                     dummy.updateMatrix();
 
                     instancedMesh.setMatrixAt(idx, dummy.matrix);
-                    instancedMesh.setColorAt(idx, voxelColor);
+                    instancedMesh.setColorAt(idx, tempVoxelColor);
 
                     idx++;
                 }
