@@ -26,11 +26,12 @@
             margin: 0;
             padding: 0;
             width: 100%;
-            background-color: #05050b;
+            background-color: #000000;
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
             color: #ffffff;
             scroll-behavior: smooth;
             overflow-x: hidden;
+            scroll-snap-type: y mandatory;
         }
 
         #webgl-canvas {
@@ -130,6 +131,13 @@
 
         .text-accent {
             color: #008000;
+        }
+
+        .story-section {
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            min-height: 100vh;
+            min-height: var(--app-height, 100vh);
         }
 
         /* Catalog Transitions and Pure Black Theme (Hardware-Accelerated Smooth Fade/Blur) */
@@ -289,8 +297,8 @@
                 ¿TENÉS UNA IDEA? <span class="text-accent">LA FABRICAMOS.</span>
             </h2>
             <p class="text-sm md:text-base text-slate-200/90 font-light tracking-wide max-w-lg mx-auto">
-                Mandanos tu archivo STL, un modelo 3D o incluso una referencia de lo que querés crear. Analizamos tu
-                proyecto, te enviamos un presupuesto y lo convertimos en una pieza real.
+                Mandanos tu archivo STL o incluso una referencia de lo que querés crear. Analizamos tu
+                proyecto y te enviamos un presupuesto.
             </p>
             <div class="pt-3 flex justify-center">
                 <a href="https://api.whatsapp.com/send/?phone=5491100000000&text=Hola%20Nox%203D,%20tengo%20un%20modelo%20STL%20para%20cotizar"
@@ -301,58 +309,13 @@
                 </a>
             </div>
         </div>
-
-        <!-- Step 3: Calidad FDM -->
-        <div id="story-step-3" class="story-step space-y-5">
-            <h2
-                class="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight text-white text-glow leading-none uppercase">
-                PRECISIÓN EN <span class="text-accent">CADA CAPA.</span>
-            </h2>
-            <p class="text-sm md:text-base text-slate-200/90 font-light tracking-wide max-w-lg mx-auto">
-                Imprimimos en 3D con tecnología FDM, logrando piezas resistentes y con excelentes terminaciones.
-                Además, podés pagar tus compras en 3 cuotas sin interés.
-            </p>
-            <div class="pt-3 flex justify-center">
-                <button onclick="navigateTo('catalog')"
-                    class="glass-card hover:bg-white/10 text-white font-semibold text-xs px-6 py-3 rounded-xl transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-shield-halved text-accent"></i>
-                    <span>Ver catálogo y garantía</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- Step 4: CTA Final -->
-        <div id="story-step-4" class="story-step space-y-5">
-            <h2
-                class="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight text-white text-glow leading-none uppercase">
-                ¿QUÉ TENÉS <span class="text-accent">EN MENTE?</span>
-            </h2>
-            <p class="text-sm md:text-base text-slate-200/90 font-light tracking-wide max-w-lg mx-auto">
-                Una pieza para tu escritorio, un regalo o una idea propia.
-                Contanos qué necesitás y hagámoslo realidad.
-            </p>
-            <div class="pt-3 flex flex-wrap justify-center gap-3">
-                <a href="https://api.whatsapp.com/send/?phone=5491100000000&text=Hola%20Nox%203D,%20quiero%20hacer%20un%20pedido"
-                    target="_blank"
-                    class="bg-[#008000] hover:bg-[#006600] text-white font-bold text-xs px-6 py-3 rounded-xl transition-all shadow-lg shadow-[#008000]/30 flex items-center gap-2">
-                    <i class="fa-brands fa-whatsapp text-sm"></i>
-                    <span>Hablar por WhatsApp</span>
-                </a>
-                <button onclick="navigateTo('catalog')"
-                    class="glass-card hover:bg-white/10 text-white font-bold text-xs px-6 py-3 rounded-xl transition-all">
-                    Ver catálogo completo
-                </button>
-            </div>
-        </div>
     </div>
 
-    <!-- Scroll Height Drivers (Triggers for Landing) -->
+    <!-- Scroll Height Drivers (Triggers for Landing - 3 Steps) -->
     <main id="ui-container" class="relative z-0 w-full">
         <section class="story-section min-h-screen" data-step="0"></section>
         <section class="story-section min-h-screen" data-step="1"></section>
         <section class="story-section min-h-screen" data-step="2"></section>
-        <section class="story-section min-h-screen" data-step="3"></section>
-        <section class="story-section min-h-screen" data-step="4"></section>
     </main>
 
     <!-- CATALOG VIEW SECTION (Revealed after the 3D Black Wave) -->
@@ -697,16 +660,16 @@
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
             scene.add(ambientLight);
 
-            dirLight = new THREE.DirectionalLight(0xffffff, 1.4);
+            dirLight = new THREE.DirectionalLight(0xffffff, 1.1);
             dirLight.position.set(25, 45, 20);
             dirLight.castShadow = true;
             scene.add(dirLight);
 
-            pointLight = new THREE.PointLight(0xf59e0b, 4.5, 26);
-            pointLight.position.set(0, 4, 0);
+            pointLight = new THREE.PointLight(0xf59e0b, 1.8, 70, 1.2);
+            pointLight.position.set(0, 16, 0);
             scene.add(pointLight);
 
             createVoxelGrid();
@@ -722,8 +685,8 @@
             geometry.translate(0, 0.5, 0);
 
             const material = new THREE.MeshStandardMaterial({
-                roughness: 0.25,
-                metalness: 0.2,
+                roughness: 0.55,
+                metalness: 0.08,
             });
 
             instancedMesh = new THREE.InstancedMesh(geometry, material, totalCount);
@@ -785,14 +748,21 @@
             const currentHue = Math.min(0.80, Math.max(0.08, 0.08 + smoothScrollRatio * 0.64 + Math.sin(seconds * 0.4) * 0.015));
             pointLight.color.setHSL(currentHue, 0.95, 0.55);
 
-            // Point light pulse (fades to 0 completely during transition)
-            pointLight.position.set(0, 3.5 + Math.sin(seconds * 1.5) * 0.5, 0);
+            // Dynamic transition lighting: luminous surge during wave expansion
             if (transitionProgress > 0) {
-                pointLight.intensity = Math.max(0.0, 4.5 * Math.pow(Math.max(0.0, 1.0 - transitionProgress * 1.5), 2));
-                if (dirLight) dirLight.intensity = Math.max(0.0, 1.4 * (1.0 - transitionProgress));
+                // Energetic glow surge that travels with the wave
+                const surge = Math.sin(transitionProgress * Math.PI) * 4.2;
+                const fadeFactor = Math.max(0.0, 1.0 - Math.pow(transitionProgress, 1.8));
+                pointLight.intensity = Math.max(0.0, (1.8 + surge) * fadeFactor);
+                pointLight.distance = 70 + transitionProgress * 80;
+                pointLight.position.set(0, 16 + Math.sin(seconds * 1.5) * 1.0 + transitionProgress * 8.0, 0);
+
+                if (dirLight) dirLight.intensity = Math.max(0.0, 1.1 * (1.0 - transitionProgress));
             } else {
-                pointLight.intensity = 4.5;
-                if (dirLight) dirLight.intensity = 1.4;
+                pointLight.intensity = 1.8;
+                pointLight.distance = 70;
+                pointLight.position.set(0, 16 + Math.sin(seconds * 1.5) * 1.0, 0);
+                if (dirLight) dirLight.intensity = 1.1;
             }
 
             const offsetX = (config.gridX * config.spacing) / 2;
@@ -825,11 +795,11 @@
 
                     let finalHeight = baseVoxelHeight;
 
-                    // Compute sunset color in-place without memory allocation
+                    // Compute sunset color in-place without memory allocation (subtly softer brightness)
                     const heightRatio = baseVoxelHeight / config.maxHeight;
                     const hue = 0.08 + smoothScrollRatio * 0.64 + (heightRatio * 0.1) + Math.sin(seconds * 0.4) * 0.015;
                     const safeHue = Math.min(0.80, Math.max(0.08, hue));
-                    tempVoxelColor.setHSL(safeHue, 0.9, 0.15 + heightRatio * 0.5);
+                    tempVoxelColor.setHSL(safeHue, 0.86, 0.13 + heightRatio * 0.42);
 
                     // --- Black Wave Collapse Calculation ---
                     if (transitionProgress > 0.001) {
@@ -1156,6 +1126,34 @@
             }, observerOptions);
 
             storySections.forEach(section => observer.observe(section));
+
+            // Strict 1-step Wheel Controller for Desktop / Trackpads
+            let isSnapping = false;
+            window.addEventListener('wheel', (e) => {
+                if (appState !== 'landing') return;
+
+                if (Math.abs(e.deltaY) > 15) {
+                    const sectionHeight = window.innerHeight;
+                    const currentScroll = window.scrollY;
+                    const currentStep = Math.round(currentScroll / sectionHeight);
+
+                    if (e.deltaY > 0 && currentStep < 2) {
+                        if (!isSnapping) {
+                            isSnapping = true;
+                            window.scrollTo({ top: (currentStep + 1) * sectionHeight, behavior: 'smooth' });
+                            setTimeout(() => { isSnapping = false; }, 550);
+                        }
+                        e.preventDefault();
+                    } else if (e.deltaY < 0 && currentStep > 0) {
+                        if (!isSnapping) {
+                            isSnapping = true;
+                            window.scrollTo({ top: (currentStep - 1) * sectionHeight, behavior: 'smooth' });
+                            setTimeout(() => { isSnapping = false; }, 550);
+                        }
+                        e.preventDefault();
+                    }
+                }
+            }, { passive: false });
 
             // Auto-hide header when scrolling inside catalog so products have 100% clean view
             const header = document.getElementById('main-header');
