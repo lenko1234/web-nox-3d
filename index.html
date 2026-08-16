@@ -531,8 +531,8 @@
                 title: "Cono Helicoidal Vóxel",
                 category: "deco",
                 catName: "Decoración",
-                price: "$ 14.500",
-                priceNum: 14500,
+                price: "$ 7.000",
+                priceNum: 7000,
                 badge: "Silk Bicolor",
                 material: "PLA Silk Oro & Plata",
                 dimensions: "18 x 10 x 10 cm",
@@ -779,6 +779,10 @@
 
             waveAccumulator += delta * currentSpeed;
             const seconds = waveAccumulator;
+
+            // Dynamically match central point light color to the exact active wave/scroll color
+            const currentHue = Math.min(0.80, Math.max(0.08, 0.08 + smoothScrollRatio * 0.64 + Math.sin(seconds * 0.4) * 0.015));
+            pointLight.color.setHSL(currentHue, 0.95, 0.55);
 
             // Point light pulse (fades to 0 completely during transition)
             pointLight.position.set(0, 3.5 + Math.sin(seconds * 1.5) * 0.5, 0);
