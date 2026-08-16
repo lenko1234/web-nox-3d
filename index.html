@@ -856,7 +856,18 @@
             renderer.render(scene, camera);
         }
 
+        let lastViewportWidth = window.innerWidth;
+
         function onWindowResize() {
+            const currentWidth = window.innerWidth;
+            const isMobileDevice = currentWidth < 1024;
+
+            // Ignore height-only resizes on mobile caused by the address bar collapsing during scroll
+            if (isMobileDevice && Math.abs(currentWidth - lastViewportWidth) < 5) {
+                return;
+            }
+            lastViewportWidth = currentWidth;
+
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
