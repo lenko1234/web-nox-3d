@@ -205,20 +205,17 @@
     <!-- 3D Canvas Layer -->
     <canvas id="webgl-canvas"></canvas>
 
-    <!-- Top Navbar (100% Transparent, Fixed Centered 3-Column Layout with Auto Hide on Scroll) -->
+    <!-- Top Navbar (100% Transparent, Clean Layout) -->
     <header id="main-header"
-        class="fixed top-0 left-0 w-full z-30 px-6 py-5 md:px-10 grid grid-cols-2 md:grid-cols-3 items-center pointer-events-auto bg-transparent border-0 transition-all duration-300">
-        <!-- Brand Logo (Left Col) -->
-        <div class="flex items-center justify-start">
-            <a href="javascript:void(0)" onclick="navigateTo('landing')" class="group">
-                <span class="font-extrabold text-2xl tracking-wider text-white uppercase drop-shadow-md">NOX <span
-                        class="text-accent">3D</span></span>
-            </a>
-        </div>
+        class="fixed top-0 left-0 w-full z-30 px-6 py-5 md:px-10 flex items-center justify-between pointer-events-auto bg-transparent border-0 transition-all duration-300">
+        <!-- Brand Logo -->
+        <a href="javascript:void(0)" onclick="navigateTo('landing')" class="group">
+            <span class="font-extrabold text-2xl tracking-wider text-white uppercase drop-shadow-md">NOX <span
+                    class="text-accent">3D</span></span>
+        </a>
 
-        <!-- Navigation Links (Center Col) -->
-        <nav
-            class="hidden md:flex items-center justify-center gap-8 font-medium text-sm text-slate-300/90 tracking-wide">
+        <!-- Navigation Links -->
+        <nav class="flex items-center gap-6 md:gap-8 font-medium text-sm text-slate-300/90 tracking-wide">
             <button onclick="navigateTo('landing')" id="nav-btn-landing"
                 class="hover:text-white transition-colors duration-200 text-white font-bold flex items-center gap-1.5">
                 <i class="fa-solid fa-house text-xs opacity-70"></i>
@@ -229,26 +226,7 @@
                 <i class="fa-solid fa-store text-xs opacity-70"></i>
                 <span>Catálogo</span>
             </button>
-            <a href="https://api.whatsapp.com/send/?phone=5491100000000&text=Hola%20Nox%203D,%20quiero%20hacer%20una%20consulta%20de%20impresion%203D"
-                target="_blank" class="hover:text-white transition-colors duration-200 flex items-center gap-1.5">
-                <i class="fa-brands fa-whatsapp text-xs text-accent"></i>
-                <span>Presupuesto</span>
-            </a>
-            <a href="https://instagram.com" target="_blank"
-                class="hover:text-white transition-colors duration-200 flex items-center gap-1.5 text-slate-400">
-                <i class="fa-brands fa-instagram text-xs"></i>
-                <span>Instagram</span>
-            </a>
         </nav>
-
-        <!-- Right Quick Action (Right Col) -->
-        <div class="flex items-center justify-end">
-            <button id="header-catalog-btn" onclick="navigateTo('catalog')"
-                class="hidden sm:inline-flex bg-[#008000] hover:bg-[#006600] text-white text-xs font-bold px-4 py-2 rounded-xl transition-opacity duration-300 shadow-md shadow-[#008000]/30 items-center gap-2">
-                <i class="fa-solid fa-bag-shopping text-xs"></i>
-                <span>Ver Catálogo</span>
-            </button>
-        </div>
     </header>
 
     <!-- Fixed Central Story Text Container (Stationary In-Place Blur In/Out) -->
@@ -924,11 +902,6 @@
                 catalogView.classList.add('active');
                 catalogView.scrollTop = 0;
             }
-            const quickBtn = document.getElementById('header-catalog-btn');
-            if (quickBtn) {
-                quickBtn.style.opacity = '0';
-                quickBtn.style.pointerEvents = 'none';
-            }
             const header = document.getElementById('main-header');
             if (header) {
                 header.style.transform = 'translateY(0)';
@@ -942,11 +915,6 @@
             const catalogView = document.getElementById('catalog-view');
             if (catalogView) {
                 catalogView.classList.remove('active');
-            }
-            const quickBtn = document.getElementById('header-catalog-btn');
-            if (quickBtn) {
-                quickBtn.style.opacity = '1';
-                quickBtn.style.pointerEvents = 'auto';
             }
             const header = document.getElementById('main-header');
             if (header) {
