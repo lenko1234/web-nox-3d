@@ -132,13 +132,15 @@
             color: #008000;
         }
 
-        /* Catalog Transitions and Pure Black Theme (Smooth Extended Blur-In) */
+        /* Catalog Transitions and Pure Black Theme (Hardware-Accelerated Smooth Fade/Blur) */
         #catalog-view {
             opacity: 0;
-            filter: blur(40px);
+            filter: blur(12px);
             pointer-events: none;
-            transition: opacity 1.3s cubic-bezier(0.16, 1, 0.3, 1), filter 1.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), filter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
             will-change: opacity, filter;
+            transform: translateZ(0);
+            backface-visibility: hidden;
         }
 
         #catalog-view.active {
@@ -268,7 +270,7 @@
                 DISEÑOS QUE YA ESTÁN <span class="text-accent">LISTOS.</span>
             </h2>
             <p class="text-sm md:text-base text-slate-200/90 font-light tracking-wide max-w-lg mx-auto">
-                Objetos funcionales, decoración y piezas de diseño pensadas para transformar tus espacios. Elegí el
+                Elegí el
                 modelo, seleccioná el color y recibilo directamente en tu casa.
             </p>
             <div class="pt-3 flex justify-center">
@@ -517,7 +519,6 @@
     <!-- Fixed Footer Bar -->
     <footer id="main-footer"
         class="fixed bottom-0 left-0 w-full z-20 px-6 py-4 md:px-10 flex items-center justify-between pointer-events-none text-xs text-slate-400/80 transition-opacity duration-300">
-        <div>© 2026 NOX 3D. Impresión & Diseño Digital.</div>
         <div id="scroll-indicator" class="flex items-center gap-4">
             <span><i class="fa-solid fa-arrows-up-down text-accent mr-1.5"></i>Deslizá para explorar</span>
         </div>
@@ -915,8 +916,8 @@
                 const scrollIndicator = document.getElementById('scroll-indicator');
                 if (scrollIndicator) scrollIndicator.style.opacity = '0';
 
-                // Scroll to top
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                // Scroll to top instantly without layout thrashing
+                window.scrollTo(0, 0);
 
             } else if (view === 'landing' && (appState === 'catalog' || appState === 'to_catalog')) {
                 hideCatalogUI();
@@ -941,8 +942,6 @@
                 header.style.transform = 'translateY(0)';
                 header.style.opacity = '1';
             }
-
-            renderProducts(catalogProducts);
         }
 
         function hideCatalogUI() {
@@ -987,7 +986,7 @@
             grid.innerHTML = products.map(p => `
                 <div class="product-card rounded-2xl overflow-hidden flex flex-col justify-between group">
                     <div class="relative h-52 bg-[#080912] overflow-hidden">
-                        <img src="${p.img}" alt="${p.title}" class="w-full h-full object-cover product-img">
+                        <img src="${p.img}" alt="${p.title}" decoding="async" loading="eager" class="w-full h-full object-cover product-img">
                         <span class="absolute top-3 left-3 bg-[#05050b]/80 backdrop-blur-md border border-white/10 text-slate-200 text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider">
                             ${p.badge}
                         </span>
@@ -1115,6 +1114,16 @@
         // --- DOM Init and Scroll Story Observer ---
         document.addEventListener('DOMContentLoaded', () => {
             initThree();
+            renderProducts(catalogProducts); // Pre-render catalog products in advance
+
+            // Pre-warm and decode all product images to GPU memory in background
+            if ('decode' in Image.prototype) {
+                catalogProducts.forEach(p => {
+                    const img = new Image();
+                    img.src = p.img;
+                    img.decode().catch(() => { });
+                });
+            }
 
             // Story observer for scroll
             const storySections = document.querySelectorAll('.story-section');
