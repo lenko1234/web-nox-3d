@@ -63,6 +63,17 @@
             text-shadow: 0 4px 20px rgba(0, 0, 0, 0.95), 0 0 30px rgba(0, 0, 0, 0.9), 0 0 50px rgba(0, 0, 0, 0.8);
         }
 
+        /* Fixed Central Story Text Container (Locked Height against Mobile Address Bar Shifts) */
+        #story-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: var(--app-height, 100vh);
+            pointer-events: none;
+            z-index: 10;
+        }
+
         /* Fixed Central Story Text Blur In / Blur Out (Zero Motion) */
         .story-step {
             position: absolute;
@@ -230,7 +241,7 @@
     </header>
 
     <!-- Fixed Central Story Text Container (Stationary In-Place Blur In/Out) -->
-    <div id="story-container" class="fixed inset-0 pointer-events-none z-10 transition-opacity duration-500">
+    <div id="story-container" class="transition-opacity duration-500">
         <!-- Step 0: Hero -->
         <div id="story-step-0" class="story-step active space-y-5">
             <h1
@@ -856,6 +867,11 @@
             renderer.render(scene, camera);
         }
 
+        function updateAppHeight() {
+            document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
+        }
+        updateAppHeight();
+
         let lastViewportWidth = window.innerWidth;
 
         function onWindowResize() {
@@ -867,6 +883,7 @@
                 return;
             }
             lastViewportWidth = currentWidth;
+            updateAppHeight();
 
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
