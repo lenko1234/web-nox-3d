@@ -121,12 +121,12 @@
             color: #008000;
         }
 
-        /* Catalog Transitions and Pure Black Theme (Stationary Blur-In) */
+        /* Catalog Transitions and Pure Black Theme (Smooth Extended Blur-In) */
         #catalog-view {
             opacity: 0;
-            filter: blur(25px);
+            filter: blur(40px);
             pointer-events: none;
-            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: opacity 1.3s cubic-bezier(0.16, 1, 0.3, 1), filter 1.3s cubic-bezier(0.16, 1, 0.3, 1);
             will-change: opacity, filter;
         }
 
@@ -217,7 +217,8 @@
         </div>
 
         <!-- Navigation Links (Center Col) -->
-        <nav class="hidden md:flex items-center justify-center gap-8 font-medium text-sm text-slate-300/90 tracking-wide">
+        <nav
+            class="hidden md:flex items-center justify-center gap-8 font-medium text-sm text-slate-300/90 tracking-wide">
             <button onclick="navigateTo('landing')" id="nav-btn-landing"
                 class="hover:text-white transition-colors duration-200 text-white font-bold flex items-center gap-1.5">
                 <i class="fa-solid fa-house text-xs opacity-70"></i>
@@ -376,25 +377,25 @@
                         data-cat="todos">
                         Todos
                     </button>
-                    <button onclick="filterCategory('lamparas')"
-                        class="category-pill text-xs font-semibold px-4 py-2 rounded-xl border border-white/15 bg-white/5 text-slate-300 hover:text-white"
-                        data-cat="lamparas">
-                        <i class="fa-solid fa-lightbulb text-amber-400 mr-1.5"></i>Lámparas
-                    </button>
-                    <button onclick="filterCategory('gamer')"
-                        class="category-pill text-xs font-semibold px-4 py-2 rounded-xl border border-white/15 bg-white/5 text-slate-300 hover:text-white"
-                        data-cat="gamer">
-                        <i class="fa-solid fa-headset text-indigo-400 mr-1.5"></i>Setup Gamer
-                    </button>
                     <button onclick="filterCategory('deco')"
                         class="category-pill text-xs font-semibold px-4 py-2 rounded-xl border border-white/15 bg-white/5 text-slate-300 hover:text-white"
                         data-cat="deco">
                         <i class="fa-solid fa-leaf text-emerald-400 mr-1.5"></i>Decoración
                     </button>
+                    <button onclick="filterCategory('fidgets')"
+                        class="category-pill text-xs font-semibold px-4 py-2 rounded-xl border border-white/15 bg-white/5 text-slate-300 hover:text-white"
+                        data-cat="fidgets">
+                        <i class="fa-solid fa-hand-sparkles text-indigo-400 mr-1.5"></i>Fidgets & EDC
+                    </button>
                     <button onclick="filterCategory('articulados')"
                         class="category-pill text-xs font-semibold px-4 py-2 rounded-xl border border-white/15 bg-white/5 text-slate-300 hover:text-white"
                         data-cat="articulados">
-                        <i class="fa-solid fa-dragon text-rose-400 mr-1.5"></i>Articulados
+                        <i class="fa-solid fa-cube text-amber-400 mr-1.5"></i>Articulados
+                    </button>
+                    <button onclick="filterCategory('souvenirs')"
+                        class="category-pill text-xs font-semibold px-4 py-2 rounded-xl border border-white/15 bg-white/5 text-slate-300 hover:text-white"
+                        data-cat="souvenirs">
+                        <i class="fa-solid fa-gift text-rose-400 mr-1.5"></i>Souvenirs & Kits
                     </button>
                     <button onclick="filterCategory('custom')"
                         class="category-pill text-xs font-semibold px-4 py-2 rounded-xl border border-white/15 bg-white/5 text-slate-300 hover:text-white"
@@ -540,7 +541,7 @@
                 id: 1,
                 title: "Cono Helicoidal Vóxel",
                 category: "deco",
-                catName: "Decoración & Arte",
+                catName: "Decoración",
                 price: "$ 14.500",
                 priceNum: 14500,
                 badge: "Silk Bicolor",
@@ -552,8 +553,8 @@
             {
                 id: 2,
                 title: "Tarjeta Háptica EDC Fidget",
-                category: "gamer",
-                catName: "Setup Gamer & EDC",
+                category: "fidgets",
+                catName: "Fidgets & EDC",
                 price: "$ 8.900",
                 priceNum: 8900,
                 badge: "Multifunción",
@@ -578,8 +579,8 @@
             {
                 id: 4,
                 title: "Kit Souvenir Minecraft 3D para Pintar",
-                category: "custom",
-                catName: "Souvenirs & Eventos",
+                category: "souvenirs",
+                catName: "Souvenirs & Kits",
                 price: "$ 5.800",
                 priceNum: 5800,
                 badge: "Kit Completo",
@@ -591,8 +592,8 @@
             {
                 id: 5,
                 title: "Lámpara Voronoi Prisma",
-                category: "lamparas",
-                catName: "Lámparas & Luz",
+                category: "deco",
+                catName: "Decoración",
                 price: "$ 24.900",
                 priceNum: 24900,
                 badge: "Más Vendido",
@@ -604,8 +605,8 @@
             {
                 id: 6,
                 title: "Soporte Gamer para Auriculares",
-                category: "gamer",
-                catName: "Setup Gamer",
+                category: "deco",
+                catName: "Decoración",
                 price: "$ 18.500",
                 priceNum: 18500,
                 badge: "PETG Ultra",
@@ -763,8 +764,8 @@
             // Handle transition state progression
             if (appState === 'to_catalog') {
                 transitionProgress += delta * 1.05;
-                // Open catalog slightly before wave finishes completely (~65%)
-                if (transitionProgress >= 0.65 && !document.getElementById('catalog-view').classList.contains('active')) {
+                // Start catalog blur-in immediately as the wave begins (~25%)
+                if (transitionProgress >= 0.40 && !document.getElementById('catalog-view').classList.contains('active')) {
                     showCatalogUI();
                 }
                 if (transitionProgress >= 1.0) {
@@ -1144,7 +1145,7 @@
             }, observerOptions);
 
             storySections.forEach(section => observer.observe(section));
-            
+
             // Auto-hide header when scrolling inside catalog so products have 100% clean view
             const header = document.getElementById('main-header');
             const catalogView = document.getElementById('catalog-view');
